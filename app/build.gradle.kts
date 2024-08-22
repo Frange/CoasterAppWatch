@@ -62,14 +62,36 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.core.splashscreen)
     androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
+
+    // Test
+    androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.test.manifest)
 
-    implementation("com.google.dagger:hilt-android:2.44")
-    kapt("com.google.dagger:hilt-android-compiler:2.44")
+    // Android X and Kotlin
+//    implementation("androidx.compose.material:material:1.3.0")
+//    implementation("androidx.recyclerview:recyclerview:1.2.1")
+//    implementation("com.google.android.material:material:1.8.0")
+
+    // Injection
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler)
+
+    // Network
+    implementation(libs.logging.interceptor)
+    implementation(libs.retrofit)
+    implementation(libs.converter.moshi)
+    implementation(libs.converter.gson)
+    implementation(libs.adapter.rxjava2)
+
+    // Images
+    implementation(libs.picasso)
 }
 
 kapt {
     correctErrorTypes = true
+}
+
+hilt {
+    enableAggregatingTask = true
 }
