@@ -1,9 +1,14 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
+//    alias(libs.plugins.android.application)
+//    alias(libs.plugins.jetbrains.kotlin.android)
 
+//    id("kotlin-kapt")
+//    id("com.google.dagger.hilt.android")
+
+    id("com.android.application")
+    id("kotlin-android")
     id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -76,6 +81,8 @@ dependencies {
     // Injection
     implementation(libs.hilt.android)
     kapt(libs.hilt.android.compiler)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.android.compiler.v247)
 
     // Network
     implementation(libs.logging.interceptor)
