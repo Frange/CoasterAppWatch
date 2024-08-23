@@ -1,7 +1,7 @@
 package com.jmr.coasterappwatch.data.api
 
 
-object Url {
+object AppUrl {
 
     private const val URL_QUEUE = "https://queue-times.com/"
 

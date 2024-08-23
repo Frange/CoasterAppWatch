@@ -5,7 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
 
-//@AndroidEntryPoint
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 //    private val viewModel: QueueViewModel by viewModels()
 
