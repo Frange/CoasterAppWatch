@@ -25,34 +25,37 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewModel.requestCompanyList()
+
         setContent {
-            val rideList by viewModel.rideList.collectAsState(emptyList())
-            val isRefreshing by viewModel.isRefreshing.collectAsState()
+//            val rideList by viewModel.rideList.collectAsState(emptyList())
+//            val isRefreshing by viewModel.isRefreshing.collectAsState()
 
-            val pullRefreshState = rememberPullRefreshState(
-                refreshing = isRefreshing,
-                onRefresh = { viewModel.refreshRides() }
-            )
+//            val pullRefreshState = rememberPullRefreshState(
+//                refreshing = isRefreshing,
+//                onRefresh = { viewModel.refreshRides() }
+//            )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pullRefresh(pullRefreshState)
-            ) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(rideList) { ride ->
-                        RideListItem(ride = ride) { selectedRide ->
-                            // Handle ride item click
-                        }
-                    }
-                }
-
-                PullRefreshIndicator(
-                    refreshing = isRefreshing,
-                    state = pullRefreshState,
-                    modifier = Modifier.align(Alignment.TopCenter)
-                )
-            }
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .pullRefresh(pullRefreshState)
+//            ) {
+//                LazyColumn(modifier = Modifier.fillMaxSize()) {
+//                    items(rideList) { ride ->
+//                        RideListItem(ride = ride) { selectedRide ->
+//                            // Handle ride item click
+//                        }
+//                    }
+//                }
+//
+//                PullRefreshIndicator(
+//                    refreshing = isRefreshing,
+//                    state = pullRefreshState,
+//                    modifier = Modifier.align(Alignment.TopCenter)
+//                )
+//            }
         }
     }
 }
