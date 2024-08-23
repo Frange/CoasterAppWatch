@@ -1,6 +1,7 @@
 package com.jmr.coasterappwatch.presentation
 
 import android.util.Log
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,31 +22,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class QueueViewModel @Inject constructor(
-//    private val requestCompanyListUseCase: RequestCompanyListUseCase,
-//    private val requestCoasterUseCase: RequestCoasterUseCase,
-//    private val requestParkListUseCase: RequestParkListUseCase,
     private val queueRepository: QueueRepository
 ) : ViewModel() {
 
-
-    private val companyList = MutableLiveData<AppResult<List<Company>>>()
-    private val parkList = MutableLiveData<AppResult<List<Park>>>()
-    private val coaster = MutableLiveData<AppResult<Coaster>>()
-//    private val _rideList = MutableStateFlow<List<Ride>>(emptyList())
-
-//    val rideList: StateFlow<List<Ride>> = _rideList.asStateFlow()
+    private val _companyList = MutableLiveData<AppResult<List<Company>>>()
+    val companyList: LiveData<AppResult<List<Company>>> = _companyList
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
-    init {
-//        loadRides()
-//        requestCompanyList()
-    }
-
     fun requestCompanyList() {
         _isRefreshing.value = true
-        
+
         viewModelScope.launch {
             queueRepository.requestCompanyList()
                 .catch {
@@ -54,7 +42,7 @@ class QueueViewModel @Inject constructor(
                     Log.v("Exception", "Exception", exception)
                 }.collect {
                     _isRefreshing.value = false
-                    companyList.postValue(it)
+                    _companyList.postValue(it)
                 }
         }
     }
@@ -115,15 +103,4 @@ class QueueViewModel @Inject constructor(
         }
     }
 
-    fun getCompanyList(): MutableLiveData<AppResult<List<Company>>> {
-        return companyList
-    }
-
-    fun getParkList(): MutableLiveData<AppResult<List<Park>>> {
-        return parkList
-    }
-
-    fun getCoaster(): MutableLiveData<AppResult<Coaster>> {
-        return coaster
-    }
 }

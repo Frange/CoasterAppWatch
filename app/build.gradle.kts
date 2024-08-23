@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.core.splashscreen)
     implementation(libs.material3.android)
+    implementation(libs.runtime.livedata)
     androidTestImplementation(platform(libs.compose.bom))
     debugImplementation(libs.ui.tooling)
 
@@ -75,9 +76,9 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
 
     // Android X and Kotlin
-//    implementation("androidx.compose.material:material:1.3.0")
-//    implementation("androidx.recyclerview:recyclerview:1.2.1")
-//    implementation("com.google.android.material:material:1.8.0")
+    implementation(libs.foundation)
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Injection
     implementation(libs.hilt.android)
@@ -94,11 +95,7 @@ dependencies {
 
     // Images
     implementation(libs.picasso)
-
-//    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
-    implementation("androidx.compose.foundation:foundation:1.6.8")
-    implementation("androidx.compose.material:material:1.6.8")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
+    implementation(libs.material)
 
 }
 
