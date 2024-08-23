@@ -6,13 +6,13 @@ import com.jmr.coasterappwatch.domain.model.Park
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-//class ParkModelImpl @Inject constructor(
-//    private val repository: QueueRepository
-//) : ParkModel {
-//
-//    override fun get(position: Int): Flow<AppResult<List<Park>>> {
-//        return repository.requestParkList(position).transform { result ->
-//            emit(result)
-//        }
-//    }
-//}
+class ParkModelImpl @Inject constructor(
+    private val repository: QueueRepository
+) : ParkModel {
+
+    override fun get(position: Int): Flow<AppResult<List<Park>>> {
+        return repository.requestParkList(position).transform { result ->
+            emit(result)
+        }
+    }
+}

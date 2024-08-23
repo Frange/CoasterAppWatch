@@ -8,20 +8,20 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.transform
 import javax.inject.Inject
 
-//class CompanyModelImpl @Inject constructor(
-//    private val repository: QueueRepository
-//) : CompanyModel {
-//
-//    override fun get(): Flow<AppResult<List<Company>>> {
-//        return repository.requestCompanyList().transform { result ->
-//            emit(result)
-//        }
-//    }
-//
-//    override fun get(id: Int): Flow<AppResult<List<Company>>> {
-//        return flow {
-//            val companyList = repository.getCurrentCompanyList()
-//            emit(AppResult.success(companyList))
-//        }
-//    }
-//}
+class CompanyModelImpl @Inject constructor(
+    private val repository: QueueRepository
+) : CompanyModel {
+
+    override fun get(): Flow<AppResult<List<Company>>> {
+        return repository.requestCompanyList().transform { result ->
+            emit(result)
+        }
+    }
+
+    override fun get(id: Int): Flow<AppResult<List<Company>>> {
+        return flow {
+            val companyList = repository.getCurrentCompanyList()
+            emit(AppResult.success(companyList))
+        }
+    }
+}
