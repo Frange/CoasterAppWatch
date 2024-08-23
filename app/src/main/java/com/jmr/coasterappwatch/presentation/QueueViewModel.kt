@@ -13,73 +13,73 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-//@HiltViewModel
-//class QueueViewModel @Inject constructor(
-//    private val queueRepository: QueueRepository
-//) : ViewModel() {
-//    private val _rideList = MutableStateFlow<List<Ride>>(emptyList())
-//    val rideList: StateFlow<List<Ride>> = _rideList.asStateFlow()
-//
-//    private val _isRefreshing = MutableStateFlow(false)
-//    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
-//
-//    init {
-//        loadRides()
-//    }
-//
-//    private fun loadRides() {
-//        viewModelScope.launch {
-//            queueRepository.requestCoaster(0, sortedByTime = false)
-//                .collect { result ->
-//                    when (result) {
-//                        is AppResult.Success -> {
-//                            if (result.data.rideList != null) {
-//                                _rideList.value = result.data.rideList!!
-//                            }
-//                        }
-//
-//                        is AppResult.Error -> {
-//                            // Handle error
-//                        }
-//
-//                        is AppResult.Loading -> {
-//                            // Show loading indicator
-//                        }
-//
-//                        is AppResult.Exception -> {
-//                            // Handle exception
-//                        }
-//                    }
-//                }
-//        }
-//    }
-//
-//    fun refreshRides() {
-//        viewModelScope.launch {
-//            _isRefreshing.value = true
-//            queueRepository.requestCoaster(0, sortedByTime = false)
-//                .collect { result ->
-//                    when (result) {
-//                        is AppResult.Success -> {
-//                            if (result.data.rideList != null) {
-//                                _rideList.value = result.data.rideList!!
-//                            }
-//                        }
-//
-//                        is AppResult.Error -> {
-//                            // Handle error
-//                        }
-//
-//                        is AppResult.Loading -> {
-//                            // Show loading indicator
-//                        }
-//
-//                        is AppResult.Exception -> {
-//                            // Handle exception
-//                        }
-//                    }
-//                }
-//            _isRefreshing.value = false
-//        }
-//    }
-//}
+@HiltViewModel
+class QueueViewModel @Inject constructor(
+    private val queueRepository: QueueRepository
+) : ViewModel() {
+    private val _rideList = MutableStateFlow<List<Ride>>(emptyList())
+    val rideList: StateFlow<List<Ride>> = _rideList.asStateFlow()
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    init {
+        loadRides()
+    }
+
+    private fun loadRides() {
+        viewModelScope.launch {
+            queueRepository.requestCoaster(0, sortedByTime = false)
+                .collect { result ->
+                    when (result) {
+                        is AppResult.Success -> {
+                            if (result.data.rideList != null) {
+                                _rideList.value = result.data.rideList!!
+                            }
+                        }
+
+                        is AppResult.Error -> {
+                            // Handle error
+                        }
+
+                        is AppResult.Loading -> {
+                            // Show loading indicator
+                        }
+
+                        is AppResult.Exception -> {
+                            // Handle exception
+                        }
+                    }
+                }
+        }
+    }
+
+    fun refreshRides() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            queueRepository.requestCoaster(0, sortedByTime = false)
+                .collect { result ->
+                    when (result) {
+                        is AppResult.Success -> {
+                            if (result.data.rideList != null) {
+                                _rideList.value = result.data.rideList!!
+                            }
+                        }
+
+                        is AppResult.Error -> {
+                            // Handle error
+                        }
+
+                        is AppResult.Loading -> {
+                            // Show loading indicator
+                        }
+
+                        is AppResult.Exception -> {
+                            // Handle exception
+                        }
+                    }
+                }
+            _isRefreshing.value = false
+        }
+    }
+}

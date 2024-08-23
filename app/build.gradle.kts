@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.activity.compose)
     implementation(libs.core.splashscreen)
+    implementation(libs.material3.android)
     androidTestImplementation(platform(libs.compose.bom))
     debugImplementation(libs.ui.tooling)
 
@@ -93,6 +94,12 @@ dependencies {
 
     // Images
     implementation(libs.picasso)
+
+//    implementation("com.google.accompanist:accompanist-swiperefresh:0.30.1")
+    implementation("androidx.compose.foundation:foundation:1.6.8")
+    implementation("androidx.compose.material:material:1.6.8")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
+
 }
 
 kapt {
