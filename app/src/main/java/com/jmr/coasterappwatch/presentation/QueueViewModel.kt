@@ -45,6 +45,7 @@ class QueueViewModel @Inject constructor(
 
     fun requestCompanyList() {
         _isRefreshing.value = true
+        
         viewModelScope.launch {
             queueRepository.requestCompanyList()
                 .catch {
