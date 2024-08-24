@@ -4,8 +4,6 @@ import com.jmr.coasterappwatch.data.api.model.park.ParkModel
 import com.jmr.coasterappwatch.data.api.model.park.ParkModelImpl
 import com.jmr.coasterappwatch.data.api.model.parkinfo.model.ParkInfoModel
 import com.jmr.coasterappwatch.data.api.model.parkinfo.model.ParkInfoModelImpl
-import com.jmr.coasterappwatch.data.api.model.ride.RideModel
-import com.jmr.coasterappwatch.data.api.model.ride.RideModelImpl
 import com.jmr.coasterappwatch.data.repository.queue.QueueRepository
 import dagger.Module
 import dagger.Provides
@@ -28,11 +26,5 @@ object ModelModule {
     fun provideParkInfoModel(
         repository: QueueRepository
     ): ParkInfoModel = ParkInfoModelImpl(repository)
-
-    @Singleton
-    @Provides
-    fun provideRideModel(
-        repository: QueueRepository
-    ): RideModel = RideModelImpl(repository)
 
 }

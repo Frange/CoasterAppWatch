@@ -1,4 +1,4 @@
-package com.jmr.coasterappwatch.presentation
+package com.jmr.coasterappwatch.presentation.main
 
 import android.content.Context
 import android.content.Intent
@@ -29,6 +29,7 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import com.jmr.coasterappwatch.domain.base.AppResult
+import com.jmr.coasterappwatch.presentation.park.ParkActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -43,11 +44,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             if (selectedParkInfo != null) {
-                RideListScreen(viewModel)
+                startActivity(Intent(this, ParkActivity::class.java).apply {
+                    putExtra("park_info_id", selectedParkInfo)
+                })
             } else {
-                EnhancedScalingLazyColumnScreen(viewModel) { parkInfoId ->
+                ParkInfoScreen(viewModel) { parkInfoId ->
                     saveSelectedParkInfoId(this, parkInfoId)
-                    startActivity(Intent(this, RideListActivity::class.java).apply {
+                    startActivity(Intent(this, ParkActivity::class.java).apply {
                         putExtra("park_info_id", parkInfoId)
                     })
                 }
@@ -72,7 +75,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun EnhancedScalingLazyColumnScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
+fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
     val coroutineScope = rememberCoroutineScope()
     val itemSpacing = 8.dp
     val state = rememberScalingLazyListState()
@@ -86,7 +89,7 @@ fun EnhancedScalingLazyColumnScreen(viewModel: QueueViewModel, onParkInfoSelecte
     Box(modifier = Modifier.fillMaxSize()) {
         when (val result = parkInfoListResult) {
             is AppResult.Success -> {
-                val parkInfoList = result.data // `result.data` es una lista de `ParkInfo`
+                val parkInfoList = result.data
 
                 ScalingLazyColumn(
                     state = state,
