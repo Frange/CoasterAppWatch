@@ -103,9 +103,20 @@ class QueueRepositoryImpl @Inject constructor(
     override fun requestRideList() = flow {
         emit(AppResult.loading())
 
-        rideList = park.rideList!!
+        if (parkInfoList.isEmpty()) {
+            requestAllParkList()
+                .catch { exception ->
+                    emit(AppResult.exception(exception))
+                }
+                .collect { _ ->
+                    rideList = park.rideList!!
+                    emit(AppResult.success(rideList))
+                }
+        } else {
+            rideList = park.rideList!!
 
-        emit(AppResult.success(rideList))
+            emit(AppResult.success(rideList))
+        }
     }
 
     override fun getCurrentCompanyList(): List<Company> {

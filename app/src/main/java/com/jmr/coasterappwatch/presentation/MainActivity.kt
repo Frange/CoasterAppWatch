@@ -7,21 +7,30 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.material3.*
-import androidx.compose.ui.unit.dp
-import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.wear.compose.foundation.lazy.AutoCenteringParams
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import com.jmr.coasterappwatch.domain.base.AppResult
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -36,7 +45,7 @@ class MainActivity : ComponentActivity() {
             if (selectedParkInfo != null) {
                 RideListScreen(viewModel)
             } else {
-                ParkInfoListScreen(viewModel) { parkInfoId ->
+                EnhancedScalingLazyColumnScreen(viewModel) { parkInfoId ->
                     saveSelectedParkInfoId(this, parkInfoId)
                     startActivity(Intent(this, RideListActivity::class.java).apply {
                         putExtra("park_info_id", parkInfoId)
@@ -63,7 +72,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ParkInfoListScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
+fun EnhancedScalingLazyColumnScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
+    val coroutineScope = rememberCoroutineScope()
+    val itemSpacing = 8.dp
+    val state = rememberScalingLazyListState()
+
     val parkInfoListResult by viewModel.parkInfoList.observeAsState()
 
     LaunchedEffect(Unit) {
@@ -73,17 +86,55 @@ fun ParkInfoListScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> U
     Box(modifier = Modifier.fillMaxSize()) {
         when (val result = parkInfoListResult) {
             is AppResult.Success -> {
-                LazyColumn {
-                    items(result.data) { parkInfo ->
-                        parkInfo.id?.let { id ->
-                            Text(
-                                text = parkInfo.name ?: "-",
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onParkInfoSelected(id)
+                val parkInfoList = result.data // `result.data` es una lista de `ParkInfo`
+
+                ScalingLazyColumn(
+                    state = state,
+                    modifier = Modifier.fillMaxSize(),
+                    anchorType = ScalingLazyListAnchorType.ItemStart,
+                    verticalArrangement = Arrangement.spacedBy(itemSpacing),
+                    autoCentering = AutoCenteringParams(itemOffset = 0)
+                ) {
+                    items(parkInfoList.size) { index ->
+                        val parkInfo = parkInfoList[index]
+                        val isSelected = state.centerItemIndex == index
+                        val scale = if (isSelected) 1.1f else 0.4f
+                        val alpha = if (isSelected) 1f else 0.6f
+                        val backgroundColor = if (isSelected) Color.Blue else Color.Gray
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 2.dp, vertical = 2.dp)
+                                .background(
+                                    backgroundColor,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .border(
+                                    2.dp,
+                                    if (isSelected) Color.White else Color.Transparent,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable {
+                                    coroutineScope.launch {
+                                        state.animateScrollToItem(index)
+                                        onParkInfoSelected(parkInfo.id!!)
                                     }
-                                    .padding(16.dp)
+                                }
+                                .graphicsLayer(
+                                    scaleX = scale,
+                                    scaleY = scale,
+                                    alpha = alpha
+                                )
+                                .padding(4.dp),
+                            Alignment.Center
+                        ) {
+                            Text(
+                                text = parkInfo.name,
+                                color = Color.White,
+                                style = TextStyle(fontSize = 12.sp),
+                                maxLines = 1,
+                                textAlign = TextAlign.Center
                             )
                         }
                     }

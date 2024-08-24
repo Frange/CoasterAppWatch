@@ -58,6 +58,10 @@ android {
 
 dependencies {
 
+    implementation(libs.material.v180)
+
+    debugImplementation(libs.androidx.ui.tooling)
+    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.play.services.wearable)
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
@@ -95,7 +99,8 @@ dependencies {
 
     // Images
     implementation(libs.picasso)
-    implementation(libs.material)
+//    implementation(libs.material)
+    implementation(libs.androidx.compose.material.v140rc01)
 
 }
 
