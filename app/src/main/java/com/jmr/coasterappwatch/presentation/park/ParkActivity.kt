@@ -1,5 +1,7 @@
 package com.jmr.coasterappwatch.presentation.park
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.ComponentActivity
@@ -25,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import com.jmr.coasterappwatch.domain.model.Land
+import com.jmr.coasterappwatch.presentation.main.MainActivity
 
 @AndroidEntryPoint
 class ParkActivity : ComponentActivity() {
@@ -37,8 +40,16 @@ class ParkActivity : ComponentActivity() {
 
         setContent {
             ParkScreen(parkViewModel, parkId) { selectedRide ->
+                // Lógica cuando se selecciona una atracción
             }
         }
+    }
+
+    @SuppressLint("MissingSuperCall")
+    override fun onBackPressed() {
+//        super.onBackPressed()
+        startActivity(Intent(this, MainActivity::class.java))
+        finish() // Termina ParkActivity para que no quede en la pila
     }
 }
 

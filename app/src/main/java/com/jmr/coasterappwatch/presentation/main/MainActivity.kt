@@ -10,7 +10,10 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,8 +25,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
@@ -44,16 +49,31 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             if (selectedParkInfo != null) {
+                // Si hay un parque guardado, navega a ParkActivity.
                 startActivity(Intent(this, ParkActivity::class.java).apply {
                     putExtra("park_info_id", selectedParkInfo)
                 })
             } else {
+                // Si no hay parque guardado, muestra la lista de parques.
                 ParkInfoScreen(viewModel) { parkInfoId ->
                     saveSelectedParkInfoId(this, parkInfoId)
                     startActivity(Intent(this, ParkActivity::class.java).apply {
                         putExtra("park_info_id", parkInfoId)
                     })
                 }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.requestAllParkList() // Cargar lista de parques.
+        setContent {
+            ParkInfoScreen(viewModel) { parkInfoId ->
+                saveSelectedParkInfoId(this, parkInfoId)
+                startActivity(Intent(this, ParkActivity::class.java).apply {
+                    putExtra("park_info_id", parkInfoId)
+                })
             }
         }
     }
@@ -77,8 +97,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
     val coroutineScope = rememberCoroutineScope()
-    val itemSpacing = 8.dp
-    val state = rememberScalingLazyListState()
+    val listState = rememberLazyListState()
 
     val parkInfoListResult by viewModel.parkInfoList.observeAsState()
 
@@ -86,21 +105,25 @@ fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit)
         viewModel.requestAllParkList()
     }
 
+    LaunchedEffect(parkInfoListResult) {
+        if (parkInfoListResult is AppResult.Success) {
+            listState.scrollToItem(0)
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         when (val result = parkInfoListResult) {
             is AppResult.Success -> {
                 val parkInfoList = result.data
 
-                ScalingLazyColumn(
-                    state = state,
+                LazyColumn(
+                    state = listState,
                     modifier = Modifier.fillMaxSize(),
-                    anchorType = ScalingLazyListAnchorType.ItemStart,
-                    verticalArrangement = Arrangement.spacedBy(itemSpacing),
-                    autoCentering = AutoCenteringParams(itemOffset = 0)
+                    verticalArrangement = Arrangement.spacedBy(8.dp) // Espaciado entre elementos
                 ) {
                     items(parkInfoList.size) { index ->
                         val parkInfo = parkInfoList[index]
-                        val isSelected = state.centerItemIndex == index
+                        val isSelected = listState.firstVisibleItemIndex == index
                         val scale = if (isSelected) 1.1f else 0.4f
                         val alpha = if (isSelected) 1f else 0.6f
                         val backgroundColor = if (isSelected) Color.Blue else Color.Gray
@@ -120,7 +143,16 @@ fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit)
                                 )
                                 .clickable {
                                     coroutineScope.launch {
-                                        state.animateScrollToItem(index)
+                                        // Calcula la posición del ítem seleccionado
+                                        val firstVisibleItemIndex = listState.firstVisibleItemIndex
+                                        val firstVisibleItemOffset =
+                                            listState.firstVisibleItemScrollOffset
+                                        val itemOffset =
+                                            (listState.layoutInfo.viewportEndOffset - listState.layoutInfo.viewportStartOffset) / 2
+//                                        val scrollOffset = (index - firstVisibleItemIndex) * 200f - itemOffset
+
+                                        // Ajusta el desplazamiento para centrar el ítem
+//                                        listState.animateScrollBy(scrollOffset)
                                         onParkInfoSelected(parkInfo.id!!)
                                     }
                                 }
