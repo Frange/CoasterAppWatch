@@ -47,9 +47,9 @@ class QueueViewModel @Inject constructor(
         }
     }
 
-    private fun loadRides() {
+    fun requestRides(id: Int) {
         viewModelScope.launch {
-            queueRepository.requestCoaster(0, sortedByTime = false)
+            queueRepository.requestParkList(id)
                 .collect { result ->
                     when (result) {
                         is AppResult.Success -> {
