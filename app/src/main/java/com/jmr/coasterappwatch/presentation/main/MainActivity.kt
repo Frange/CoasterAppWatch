@@ -124,7 +124,7 @@ fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit)
                     items(parkInfoList.size) { index ->
                         val parkInfo = parkInfoList[index]
                         val isSelected = listState.firstVisibleItemIndex == index
-                        val scale = if (isSelected) 1.1f else 0.4f
+                        val scale = if (isSelected) 1.4f else 0.8f
                         val alpha = if (isSelected) 1f else 0.6f
                         val backgroundColor = if (isSelected) Color.Blue else Color.Gray
 
@@ -138,7 +138,7 @@ fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit)
                                 )
                                 .border(
                                     2.dp,
-                                    if (isSelected) Color.White else Color.Transparent,
+                                    Color.Transparent,
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable {

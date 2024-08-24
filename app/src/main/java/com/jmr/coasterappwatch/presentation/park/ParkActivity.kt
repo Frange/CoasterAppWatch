@@ -139,7 +139,7 @@ fun LandItem(land: Land, isExpanded: Boolean, onLandClick: () -> Unit) {
         Text(
             text = land.name,
             style = TextStyle(
-                fontSize = 20.sp,
+                fontSize = 14.sp,
                 color = Color.Red
             )
         )
@@ -155,7 +155,7 @@ fun RideListItem(ride: Ride, onClick: (Ride) -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick(ride) }
-            .padding(4.dp),
+            .padding(2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -163,11 +163,23 @@ fun RideListItem(ride: Ride, onClick: (Ride) -> Unit) {
             text = ride.name ?: "-",
             color = if (ride.waitTime == null || ride.waitTime < 0) Color.Red else Color.White,
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.Center
+            style = TextStyle(
+                fontSize = 10.sp,
+                color = Color.Gray
+            ),
+            textAlign = TextAlign.Center,
+            minLines = 2,
+            maxLines = 2,
         )
         Text(
             text = if (ride.waitTime == null || ride.waitTime < 0) "CLOSED" else "${ride.waitTime} min",
-            color = if (ride.waitTime == null || ride.waitTime < 0) Color.Red else Color.White
+            color = if (ride.waitTime == null || ride.waitTime < 0) Color.Red else Color.White,
+            style = TextStyle(
+                fontSize = 10.sp,
+                color = Color.Gray
+            ),
+            minLines = 2,
+            maxLines = 2,
         )
     }
 }
