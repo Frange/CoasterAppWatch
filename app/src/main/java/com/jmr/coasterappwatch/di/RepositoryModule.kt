@@ -1,6 +1,7 @@
 package com.jmr.coasterappwatch.di
 
 import com.google.gson.Gson
+import com.jmr.coasterappwatch.data.api.service.MockApiService
 import com.jmr.coasterappwatch.data.api.service.QueueApiService
 import com.jmr.coasterappwatch.data.repository.queue.QueueRepository
 import com.jmr.coasterappwatch.data.repository.queue.QueueRepositoryImpl
@@ -18,7 +19,8 @@ object RepositoryModule {
     @Provides
     fun providePoiRepository(
         gson: Gson,
-        service: QueueApiService
-    ): QueueRepository = QueueRepositoryImpl(gson, service)
+        service: QueueApiService,
+        mockApiService: MockApiService
+    ): QueueRepository = QueueRepositoryImpl(gson, service, mockApiService)
 
 }

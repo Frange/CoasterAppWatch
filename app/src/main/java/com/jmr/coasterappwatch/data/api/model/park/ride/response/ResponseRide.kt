@@ -1,4 +1,4 @@
-package com.jmr.coasterappwatch.data.api.model.coaster.response.inner
+package com.jmr.coasterappwatch.data.api.model.park.ride.response
 
 import com.jmr.coasterappwatch.domain.model.Ride
 import com.squareup.moshi.Json

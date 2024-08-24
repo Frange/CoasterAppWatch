@@ -1,11 +1,14 @@
 package com.jmr.coasterappwatch.di
 
+import android.content.Context
 import com.google.gson.Gson
 import com.jmr.coasterappwatch.data.api.AppUrl
+import com.jmr.coasterappwatch.data.api.service.MockApiService
 import com.jmr.coasterappwatch.data.api.service.QueueApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -59,6 +62,14 @@ object AppModule {
         .apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
+
+    @Singleton
+    @Provides
+    fun provideMockApiService(
+        @ApplicationContext context: Context
+    ): MockApiService {
+        return MockApiService(context)
+    }
 
     @Singleton
     @Provides

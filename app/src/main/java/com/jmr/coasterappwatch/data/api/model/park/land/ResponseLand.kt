@@ -1,7 +1,8 @@
-package com.jmr.coasterappwatch.data.api.model.coaster.response.inner
+package com.jmr.coasterappwatch.data.api.model.park.land
 
+import com.jmr.coasterappwatch.data.api.model.park.ride.response.ResponseRide
+import com.jmr.coasterappwatch.data.api.model.park.ride.response.toRide
 import com.jmr.coasterappwatch.domain.model.Land
-import com.jmr.coasterappwatch.domain.model.Ride
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
@@ -15,12 +16,12 @@ data class ResponseLand(
     var name: String,
 
     @Json(name = "rides")
-    var rides: List<Ride>
+    var rides: List<ResponseRide>
 
 )
 
 fun ResponseLand.toLand() = Land(
     id = id,
     name = name,
-    rideList = rides,
+    rideList = rides.map { it.toRide() }
 )
