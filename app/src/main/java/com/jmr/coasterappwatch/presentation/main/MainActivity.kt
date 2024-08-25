@@ -52,24 +52,20 @@ class MainActivity : ComponentActivity() {
     private fun RenderScreen() {
         val selectedParkInfo by remember { mutableStateOf(getSelectedPark(this)) }
 
-        // Verifica si hay un ID de parque seleccionado y redirige si es necesario
         if (selectedParkInfo != null) {
-            // Redirige a ParkActivity
             LaunchedEffect(selectedParkInfo) {
                 startActivity(Intent(this@MainActivity, ParkActivity::class.java).apply {
                     putExtra("park_info_id", selectedParkInfo)
                 })
-                // Borra el park_info_id después de redirigir
                 clearSelectedParkInfo(this@MainActivity)
             }
-        } else {
-            // Muestra la pantalla principal
-            RenderParkInfoScreen(viewModel) { parkInfoId ->
-                saveSelectedParkInfoId(this, parkInfoId)
-                startActivity(Intent(this, ParkActivity::class.java).apply {
-                    putExtra("park_info_id", parkInfoId)
-                })
-            }
+        }
+
+        RenderParkInfoScreen(viewModel) { parkInfoId ->
+            saveSelectedParkInfoId(this, parkInfoId)
+            startActivity(Intent(this, ParkActivity::class.java).apply {
+                putExtra("park_info_id", parkInfoId)
+            })
         }
     }
 
@@ -96,8 +92,6 @@ class MainActivity : ComponentActivity() {
         editor.apply()
     }
 }
-
-
 
 @Composable
 fun RenderParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
