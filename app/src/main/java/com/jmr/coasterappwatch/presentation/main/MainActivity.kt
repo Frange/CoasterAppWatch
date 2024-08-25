@@ -1,5 +1,6 @@
 package com.jmr.coasterappwatch.presentation.main
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -8,35 +9,31 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.wear.compose.foundation.lazy.AutoCenteringParams
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.ListHeader
+import com.jmr.coasterappwatch.R
 import com.jmr.coasterappwatch.domain.base.AppResult
+import com.jmr.coasterappwatch.domain.model.ParkInfo
 import com.jmr.coasterappwatch.presentation.park.ParkActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -55,7 +52,7 @@ class MainActivity : ComponentActivity() {
                 })
             } else {
                 // Si no hay parque guardado, muestra la lista de parques.
-                ParkInfoScreen(viewModel) { parkInfoId ->
+                RenderParkInfoScreen(viewModel) { parkInfoId ->
                     saveSelectedParkInfoId(this, parkInfoId)
                     startActivity(Intent(this, ParkActivity::class.java).apply {
                         putExtra("park_info_id", parkInfoId)
@@ -69,7 +66,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         viewModel.requestAllParkList() // Cargar lista de parques.
         setContent {
-            ParkInfoScreen(viewModel) { parkInfoId ->
+            RenderParkInfoScreen(viewModel) { parkInfoId ->
                 saveSelectedParkInfoId(this, parkInfoId)
                 startActivity(Intent(this, ParkActivity::class.java).apply {
                     putExtra("park_info_id", parkInfoId)
@@ -95,9 +92,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
+fun RenderParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
     val coroutineScope = rememberCoroutineScope()
-    val listState = rememberScalingLazyListState()
+//    val listState = rememberScalingLazyListState()
+    val listState = rememberLazyListState()
+
 
     val parkInfoListResult by viewModel.parkInfoList.observeAsState()
 
@@ -112,8 +111,79 @@ fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit)
         }
     }
 
-    
+    RenderParkInfoList(parkInfoListResult, listState)
 }
+
+@Composable
+fun RenderParkInfoList(
+    parkInfoListResult: AppResult<List<ParkInfo>>?,
+    listState: LazyListState
+) {
+    ScalingLazyColumn(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        when (parkInfoListResult) {
+            is AppResult.Success -> {
+                val parkInfoList = parkInfoListResult.data
+
+                item {
+                    ListHeader {
+                        Text(text = "List Header")
+                    }
+                }
+                items(parkInfoList.size) { index ->
+                    RenderChip(parkInfoList[index], listState, index)
+                }
+            }
+
+            is AppResult.Error -> {}
+            is AppResult.Exception -> {}
+            is AppResult.Loading -> {}
+            null -> {
+
+            }
+        }
+    }
+}
+
+@SuppressLint("FrequentlyChangedStateReadInComposition")
+@Composable
+fun RenderChip(parkInfo: ParkInfo, listState: LazyListState, index: Int) {
+    val isSelected = listState.firstVisibleItemIndex == index
+//    val isSelected = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index == index
+    val scale = if (isSelected) 1.0f else 0.7f
+    val alpha = if (isSelected) 1f else 0.6f
+
+    Chip(
+        onClick = { },
+        label = {
+            Text(
+                text = parkInfo.name,
+                textAlign = TextAlign.Center,
+                style = TextStyle(
+                    color = if (isSelected) Color.White else Color.Gray,
+                    fontSize = if (isSelected) 12.sp else 8.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                ),
+            )
+        },
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(0.dp)
+            .scale(scale, 1f)
+            .alpha(alpha)
+            .height(if (isSelected) 36.dp else 20.dp),
+        colors = if (isSelected) ChipDefaults.chipColors(
+            backgroundColor = Color(
+                ContextCompat.getColor(
+                    LocalContext.current,
+                    R.color.primary
+                )
+            )
+        ) else ChipDefaults.secondaryChipColors(),
+    )
+}
+
 //@Composable
 //fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
 //    val coroutineScope = rememberCoroutineScope()

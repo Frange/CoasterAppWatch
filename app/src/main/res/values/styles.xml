@@ -1,7 +1,7 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:windowBackground">@color/color_background</item>
+        <item name="android:windowBackground">@color/always_black</item>
     </style>
 
 </resources>
