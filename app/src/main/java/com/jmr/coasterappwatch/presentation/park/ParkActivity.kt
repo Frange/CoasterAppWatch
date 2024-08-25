@@ -113,7 +113,7 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
-            Spacer(modifier = Modifier.height(20.dp)) // Espacio adicional antes del primer elemento
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
         park.landList?.forEach { land ->
@@ -172,22 +172,6 @@ fun LandItem(land: Land, isExpanded: Boolean, onLandClick: () -> Unit) {
 }
 
 @Composable
-fun TitleHeader(title: String, onHeaderClick: () -> Unit) {
-    Text(
-        text = title,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onHeaderClick() }
-            .padding(4.dp),
-        style = TextStyle(
-            fontSize = 10.sp,
-            color = Color.Gray
-        ),
-        textAlign = TextAlign.Center
-    )
-}
-
-@Composable
 fun RideItem(ride: Ride, onClick: (Ride) -> Unit) {
     Row(
         modifier = Modifier
@@ -199,7 +183,14 @@ fun RideItem(ride: Ride, onClick: (Ride) -> Unit) {
     ) {
         Text(
             text = ride.name ?: "-",
-            color = if (ride.waitTime == null || ride.waitTime < 0) Color.Red else Color.White,
+            color =
+            if (ride.waitTime == null || ride.waitTime <= 0) Color.Red
+            else if (!ride.isFavourite) Color.White
+            else Color(
+                ContextCompat.getColor(
+                    LocalContext.current, R.color.primary
+                )
+            ),
             modifier = Modifier.weight(1f),
             style = TextStyle(
                 fontSize = 8.sp,
@@ -210,8 +201,13 @@ fun RideItem(ride: Ride, onClick: (Ride) -> Unit) {
             maxLines = 1,
         )
         Text(
-            text = if (ride.waitTime == null || ride.waitTime < 0) "CLOSED" else "${ride.waitTime} min",
-            color = if (ride.waitTime == null || ride.waitTime < 0) Color.Red else Color.White,
+            text = if (ride.waitTime == null || ride.waitTime <= 0) "CLOSED" else "${ride.waitTime} min",
+            color = if (ride.waitTime == null || ride.waitTime <= 0) Color.Red else if (!ride.isFavourite) Color.White
+            else Color(
+                ContextCompat.getColor(
+                    LocalContext.current, R.color.primary
+                )
+            ),
             modifier = Modifier.padding(4.dp, 0.dp),
             style = TextStyle(
                 fontSize = 10.sp,
