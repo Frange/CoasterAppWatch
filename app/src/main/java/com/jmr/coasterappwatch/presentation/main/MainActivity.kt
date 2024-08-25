@@ -41,38 +41,33 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: QueueViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    private fun goToPark(selectedParkInfo: Int) {
+        startActivity(Intent(this, ParkActivity::class.java).apply {
+            putExtra("park_info_id", selectedParkInfo)
+        })
+    }
 
-        val selectedParkInfo = getSelectedPark(this)
-
-        setContent {
-            if (selectedParkInfo != null) {
-                // Si hay un parque guardado, navega a ParkActivity.
-                startActivity(Intent(this, ParkActivity::class.java).apply {
-                    putExtra("park_info_id", selectedParkInfo)
-                })
-            } else {
-                // Si no hay parque guardado, muestra la lista de parques.
-                RenderParkInfoScreen(viewModel) { parkInfoId ->
-                    saveSelectedParkInfoId(this, parkInfoId)
-                    startActivity(Intent(this, ParkActivity::class.java).apply {
-                        putExtra("park_info_id", parkInfoId)
-                    })
-                }
-            }
+    @Composable
+    private fun RenderScreen() {
+        RenderParkInfoScreen(viewModel) { parkInfoId ->
+            saveSelectedParkInfoId(this, parkInfoId)
+            startActivity(Intent(this, ParkActivity::class.java).apply {
+                putExtra("park_info_id", parkInfoId)
+            })
         }
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.requestAllParkList() // Cargar lista de parques.
+        viewModel.requestAllParkList()
+
+        val selectedParkInfo = getSelectedPark(this)
+
         setContent {
-            RenderParkInfoScreen(viewModel) { parkInfoId ->
-                saveSelectedParkInfoId(this, parkInfoId)
-                startActivity(Intent(this, ParkActivity::class.java).apply {
-                    putExtra("park_info_id", parkInfoId)
-                })
+            if (selectedParkInfo != null) {
+                goToPark(selectedParkInfo)
+            } else {
+                RenderScreen()
             }
         }
     }
@@ -146,7 +141,12 @@ fun RenderParkInfoList(
 
 @SuppressLint("FrequentlyChangedStateReadInComposition")
 @Composable
-fun RenderChip(parkInfo: ParkInfo, listState: ScalingLazyListState, index: Int, onParkInfoSelected: (Int) -> Unit) {
+fun RenderChip(
+    parkInfo: ParkInfo,
+    listState: ScalingLazyListState,
+    index: Int,
+    onParkInfoSelected: (Int) -> Unit
+) {
     val density = LocalDensity.current
 
     // Obtener la información de los elementos visibles

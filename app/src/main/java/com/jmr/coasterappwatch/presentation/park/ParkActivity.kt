@@ -1,10 +1,14 @@
 package com.jmr.coasterappwatch.presentation.park
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
@@ -40,16 +44,35 @@ class ParkActivity : ComponentActivity() {
 
         setContent {
             ParkScreen(parkViewModel, parkId) { selectedRide ->
-                // Lógica cuando se selecciona una atracción
+                onClickedRide(selectedRide)
             }
         }
     }
 
-    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
-    @SuppressLint("MissingSuperCall")
-    override fun onBackPressed() {
+    private fun onClickedRide(selectedRide: Ride) {
+
+    }
+
+    override fun onNavigateUp(): Boolean {
+        return super.onNavigateUp()
+    }
+    override fun onDestroy() {
+        goBackToMain()
+        super.onDestroy()
+    }
+
+    private fun goBackToMain() {
+        clearSelectedParkInfo(this)
         startActivity(Intent(this, MainActivity::class.java))
-        finish()
+//        finish()
+    }
+
+    private fun clearSelectedParkInfo(context: Context) {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.remove("selected_park_info_id")
+        editor.apply()
     }
 }
 
