@@ -9,8 +9,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,7 +16,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.ListHeader
@@ -93,11 +95,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun RenderParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
-    val coroutineScope = rememberCoroutineScope()
-//    val listState = rememberScalingLazyListState()
-    val listState = rememberLazyListState()
-
-
+    val listState = rememberScalingLazyListState()
     val parkInfoListResult by viewModel.parkInfoList.observeAsState()
 
     LaunchedEffect(Unit) {
@@ -111,16 +109,18 @@ fun RenderParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) ->
         }
     }
 
-    RenderParkInfoList(parkInfoListResult, listState)
+    RenderParkInfoList(parkInfoListResult, listState, onParkInfoSelected)
 }
 
 @Composable
 fun RenderParkInfoList(
     parkInfoListResult: AppResult<List<ParkInfo>>?,
-    listState: LazyListState
+    listState: ScalingLazyListState,
+    onParkInfoSelected: (Int) -> Unit
 ) {
     ScalingLazyColumn(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        state = listState // Aseguramos que el estado de la lista se pase correctamente
     ) {
         when (parkInfoListResult) {
             is AppResult.Success -> {
@@ -132,30 +132,48 @@ fun RenderParkInfoList(
                     }
                 }
                 items(parkInfoList.size) { index ->
-                    RenderChip(parkInfoList[index], listState, index)
+                    RenderChip(parkInfoList[index], listState, index, onParkInfoSelected)
                 }
             }
 
             is AppResult.Error -> {}
             is AppResult.Exception -> {}
             is AppResult.Loading -> {}
-            null -> {
-
-            }
+            null -> {}
         }
     }
 }
 
 @SuppressLint("FrequentlyChangedStateReadInComposition")
 @Composable
-fun RenderChip(parkInfo: ParkInfo, listState: LazyListState, index: Int) {
-    val isSelected = listState.firstVisibleItemIndex == index
-//    val isSelected = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index == index
+fun RenderChip(parkInfo: ParkInfo, listState: ScalingLazyListState, index: Int, onParkInfoSelected: (Int) -> Unit) {
+    val density = LocalDensity.current
+
+    // Obtener la información de los elementos visibles
+    val visibleItemsInfo = listState.layoutInfo.visibleItemsInfo
+
+    // Calcular el centro de la pantalla en píxeles
+    val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
+    val screenCenter = screenHeightPx / 2
+
+    // Calcular el índice del elemento más cercano al centro
+    val closestItemIndex = visibleItemsInfo
+        .takeIf { it.isNotEmpty() } // Asegurar que no esté vacío
+        ?.minByOrNull { itemInfo ->
+            val itemCenter = (itemInfo.offset + 220 + itemInfo.size / 2).toFloat()
+            kotlin.math.abs(itemCenter - screenCenter)
+        }?.index
+
+    // Verificar si este es el elemento seleccionado
+    val isSelected = closestItemIndex == index
+
     val scale = if (isSelected) 1.0f else 0.7f
     val alpha = if (isSelected) 1f else 0.6f
 
     Chip(
-        onClick = { },
+        onClick = {
+            onParkInfoSelected(parkInfo.id!!)
+        },
         label = {
             Text(
                 text = parkInfo.name,
@@ -170,7 +188,7 @@ fun RenderChip(parkInfo: ParkInfo, listState: LazyListState, index: Int) {
         modifier = Modifier
             .fillMaxSize()
             .padding(0.dp)
-            .scale(scale, 1f)
+            .scale(scale)
             .alpha(alpha)
             .height(if (isSelected) 36.dp else 20.dp),
         colors = if (isSelected) ChipDefaults.chipColors(
@@ -183,112 +201,3 @@ fun RenderChip(parkInfo: ParkInfo, listState: LazyListState, index: Int) {
         ) else ChipDefaults.secondaryChipColors(),
     )
 }
-
-//@Composable
-//fun ParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
-//    val coroutineScope = rememberCoroutineScope()
-//    val listState = rememberScalingLazyListState()
-//
-//    val parkInfoListResult by viewModel.parkInfoList.observeAsState()
-//
-//    LaunchedEffect(Unit) {
-//        viewModel.requestAllParkList()
-//    }
-//
-//    LaunchedEffect(parkInfoListResult) {
-//        if (parkInfoListResult is AppResult.Success) {
-//            val indexToScrollTo = 0 // Ajusta el índice según el ítem que quieras centrar
-//            listState.animateScrollToItem(indexToScrollTo)
-//        }
-//    }
-//
-//    // Renderiza la interfaz de usuario
-//    Box(modifier = Modifier.fillMaxSize()) {
-//        when (val result = parkInfoListResult) {
-//            is AppResult.Success -> {
-//                val parkInfoList = result.data
-//
-//                ScalingLazyColumn(
-//                    state = listState,
-//                    modifier = Modifier.fillMaxWidth()
-//                ) {
-//                    // Elemento de cabecera
-//                    item {
-//                        ListHeader {
-//                            Text(
-//                                text = "Parques de atracciones",
-//                                style = TextStyle(
-//                                    color = Color.White,
-//                                    fontSize = 16.sp,
-//                                    fontWeight = FontWeight.Bold
-//                                ),
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .padding(8.dp),
-//                                textAlign = TextAlign.Center
-//                            )
-//                        }
-//                    }
-//
-//                    // Elementos de la lista
-//                    items(parkInfoList.size) { index ->
-//                        val parkInfo = parkInfoList[index]
-//                        val isSelected =
-//                            listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index == index
-//                        val scale = if (isSelected) 1.2f else 0.7f
-//                        val alpha = if (isSelected) 1f else 0.6f
-//
-//                        Chip(
-//                            onClick = {
-//                                coroutineScope.launch {
-////                                    listState.animateScrollToItem(index)
-//                                    onParkInfoSelected(parkInfo.id!!)
-//                                }
-//                            },
-//                            label = {
-//                                Text(
-//                                    parkInfo.name,
-//                                    modifier = Modifier.graphicsLayer(
-//                                        scaleX = scale,
-//                                        scaleY = scale,
-//                                        alpha = alpha
-//                                    ),
-//                                    textAlign = TextAlign.Center
-//                                )
-//                            },
-//                            colors = if (isSelected) {
-//                                ChipDefaults.primaryChipColors(
-//                                    backgroundColor = Color.Blue,
-//                                    contentColor = Color.White
-//                                )
-//                            } else {
-//                                ChipDefaults.secondaryChipColors(
-//                                    backgroundColor = Color.Gray,
-//                                    contentColor = Color.Black
-//                                )
-//                            },
-//                            modifier = Modifier
-//                                .height(if (isSelected) 50.dp else 30.dp)
-//                                .padding(4.dp)
-//                                .fillMaxWidth()
-//                        )
-//                    }
-//                }
-//            }
-//
-//            is AppResult.Error -> {
-//                // Puedes mostrar un mensaje de error aquí si lo deseas
-//            }
-//
-//            is AppResult.Loading -> {
-//                // Puedes mostrar un indicador de carga aquí si lo deseas
-//            }
-//
-//            is AppResult.Exception -> {
-//                // Puedes manejar excepciones aquí si lo deseas
-//            }
-//
-//            null -> {}
-//        }
-//    }
-//}
