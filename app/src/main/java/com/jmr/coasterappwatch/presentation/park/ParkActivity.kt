@@ -112,6 +112,10 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
     val isCategoryExpanded = remember { mutableStateOf(true) }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
+        item {
+            Spacer(modifier = Modifier.height(20.dp)) // Espacio adicional antes del primer elemento
+        }
+
         park.landList?.forEach { land ->
             item {
                 LandItem(
@@ -134,20 +138,15 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
 
         val rideList = park.rideList.orEmpty()
         if (rideList.isNotEmpty() && park.landList.isNullOrEmpty()) {
-            item {
-                TitleHeader(
-                    title = "Atracciones",
-                    onHeaderClick = {
-                        // Implementación opcional
-                    }
-                )
-            }
-
             if (isCategoryExpanded.value) {
                 items(rideList) { ride ->
                     RideItem(ride = ride, onClick = onRideClick)
                 }
             }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -158,10 +157,10 @@ fun LandItem(land: Land, isExpanded: Boolean, onLandClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onLandClick() }
-            .padding(6.dp)
+            .padding(4.dp) // Ajusta el padding para dar más espacio
     ) {
         Text(
-            text = land.name,
+            text = "--- ${land.name} ---",
             modifier = Modifier
                 .align(Alignment.CenterHorizontally),
             style = TextStyle(
@@ -171,7 +170,6 @@ fun LandItem(land: Land, isExpanded: Boolean, onLandClick: () -> Unit) {
         )
     }
 }
-
 
 @Composable
 fun TitleHeader(title: String, onHeaderClick: () -> Unit) {
