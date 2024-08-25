@@ -41,33 +41,34 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: QueueViewModel by viewModels()
 
-    private fun goToPark(selectedParkInfo: Int) {
-        startActivity(Intent(this, ParkActivity::class.java).apply {
-            putExtra("park_info_id", selectedParkInfo)
-        })
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            RenderScreen()
+        }
     }
 
     @Composable
     private fun RenderScreen() {
-        RenderParkInfoScreen(viewModel) { parkInfoId ->
-            saveSelectedParkInfoId(this, parkInfoId)
-            startActivity(Intent(this, ParkActivity::class.java).apply {
-                putExtra("park_info_id", parkInfoId)
-            })
-        }
-    }
+        val selectedParkInfo by remember { mutableStateOf(getSelectedPark(this)) }
 
-    override fun onResume() {
-        super.onResume()
-        viewModel.requestAllParkList()
-
-        val selectedParkInfo = getSelectedPark(this)
-
-        setContent {
-            if (selectedParkInfo != null) {
-                goToPark(selectedParkInfo)
-            } else {
-                RenderScreen()
+        // Verifica si hay un ID de parque seleccionado y redirige si es necesario
+        if (selectedParkInfo != null) {
+            // Redirige a ParkActivity
+            LaunchedEffect(selectedParkInfo) {
+                startActivity(Intent(this@MainActivity, ParkActivity::class.java).apply {
+                    putExtra("park_info_id", selectedParkInfo)
+                })
+                // Borra el park_info_id después de redirigir
+                clearSelectedParkInfo(this@MainActivity)
+            }
+        } else {
+            // Muestra la pantalla principal
+            RenderParkInfoScreen(viewModel) { parkInfoId ->
+                saveSelectedParkInfoId(this, parkInfoId)
+                startActivity(Intent(this, ParkActivity::class.java).apply {
+                    putExtra("park_info_id", parkInfoId)
+                })
             }
         }
     }
@@ -86,7 +87,17 @@ class MainActivity : ComponentActivity() {
         val parkInfoId = sharedPreferences.getInt("selected_park_info_id", -1)
         return if (parkInfoId != -1) parkInfoId else null
     }
+
+    private fun clearSelectedParkInfo(context: Context) {
+        val sharedPreferences: SharedPreferences =
+            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.remove("selected_park_info_id")
+        editor.apply()
+    }
 }
+
+
 
 @Composable
 fun RenderParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {

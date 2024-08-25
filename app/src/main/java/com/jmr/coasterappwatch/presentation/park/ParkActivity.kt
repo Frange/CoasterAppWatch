@@ -50,31 +50,30 @@ class ParkActivity : ComponentActivity() {
     }
 
     private fun onClickedRide(selectedRide: Ride) {
-
+        // Manejo de clic en atracción
     }
 
-    override fun onNavigateUp(): Boolean {
-        return super.onNavigateUp()
-    }
-    override fun onDestroy() {
+    override fun onBackPressed() {
         goBackToMain()
-        super.onDestroy()
     }
 
     private fun goBackToMain() {
-        clearSelectedParkInfo(this)
-        startActivity(Intent(this, MainActivity::class.java))
-//        finish()
+        clearSelectedParkInfo()
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        startActivity(intent)
+        finish()
     }
 
-    private fun clearSelectedParkInfo(context: Context) {
+    private fun clearSelectedParkInfo() {
         val sharedPreferences: SharedPreferences =
-            context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.remove("selected_park_info_id")
         editor.apply()
     }
 }
+
 
 @Composable
 fun ParkScreen(viewModel: ParkViewModel, parkId: Int, onRideClick: (Ride) -> Unit) {
