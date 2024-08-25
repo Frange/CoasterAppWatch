@@ -108,7 +108,7 @@ fun ParkScreen(viewModel: ParkViewModel, parkId: Int, onRideClick: (Ride) -> Uni
 
 @Composable
 fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
-    val expandedLands = remember { mutableStateMapOf<Int, Boolean>() }
+    val expandedLands = remember { mutableStateOf<Map<Int, Boolean>>(emptyMap()) }
     val isCategoryExpanded = remember { mutableStateOf(true) }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -116,14 +116,16 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
             item {
                 LandItem(
                     land = land,
-                    isExpanded = expandedLands[land.id] ?: true,
+                    isExpanded = expandedLands.value[land.id] ?: false,
                     onLandClick = {
-                        expandedLands[land.id] = !(expandedLands[land.id] ?: true)
+                        expandedLands.value = expandedLands.value.toMutableMap().apply {
+                            put(land.id, !(expandedLands.value[land.id] ?: false))
+                        }
                     }
                 )
             }
 
-            if (expandedLands[land.id] == true) {
+            if (expandedLands.value[land.id] == true) {
                 items(land.rideList.orEmpty()) { ride ->
                     RideItem(ride = ride, onClick = onRideClick)
                 }
@@ -136,6 +138,7 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
                 TitleHeader(
                     title = "Atracciones",
                     onHeaderClick = {
+                        // Implementación opcional
                     }
                 )
             }
@@ -147,22 +150,6 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
             }
         }
     }
-}
-
-@Composable
-fun TitleHeader(title: String, onHeaderClick: () -> Unit) {
-    Text(
-        text = title,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onHeaderClick() }
-            .padding(4.dp),
-        style = TextStyle(
-            fontSize = 10.sp,
-            color = Color.Gray
-        ),
-        textAlign = TextAlign.Center
-    )
 }
 
 @Composable
@@ -183,6 +170,23 @@ fun LandItem(land: Land, isExpanded: Boolean, onLandClick: () -> Unit) {
             )
         )
     }
+}
+
+
+@Composable
+fun TitleHeader(title: String, onHeaderClick: () -> Unit) {
+    Text(
+        text = title,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onHeaderClick() }
+            .padding(4.dp),
+        style = TextStyle(
+            fontSize = 10.sp,
+            color = Color.Gray
+        ),
+        textAlign = TextAlign.Center
+    )
 }
 
 @Composable
