@@ -5,10 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
@@ -26,10 +24,13 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.jmr.coasterappwatch.R
 import com.jmr.coasterappwatch.domain.model.Land
 import com.jmr.coasterappwatch.presentation.main.MainActivity
 
@@ -53,6 +54,8 @@ class ParkActivity : ComponentActivity() {
         // Manejo de clic en atracción
     }
 
+    @Deprecated("This method has been deprecated in favor of using the\n      {@link OnBackPressedDispatcher} via {@link #getOnBackPressedDispatcher()}.\n      The OnBackPressedDispatcher controls how back button events are dispatched\n      to one or more {@link OnBackPressedCallback} objects.")
+    @SuppressLint("MissingSuperCall")
     override fun onBackPressed() {
         goBackToMain()
     }
@@ -60,7 +63,7 @@ class ParkActivity : ComponentActivity() {
     private fun goBackToMain() {
         clearSelectedParkInfo()
         val intent = Intent(this, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        intent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         startActivity(intent)
         finish()
     }
@@ -73,7 +76,6 @@ class ParkActivity : ComponentActivity() {
         editor.apply()
     }
 }
-
 
 @Composable
 fun ParkScreen(viewModel: ParkViewModel, parkId: Int, onRideClick: (Ride) -> Unit) {
@@ -123,31 +125,44 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
 
             if (expandedLands[land.id] == true) {
                 items(land.rideList.orEmpty()) { ride ->
-                    RideListItem(ride = ride, onClick = onRideClick)
+                    RideItem(ride = ride, onClick = onRideClick)
                 }
             }
         }
 
-        // Si no hay tierras, mostrar solo las atracciones (Rides)
         val rideList = park.rideList.orEmpty()
         if (rideList.isNotEmpty() && park.landList.isNullOrEmpty()) {
             item {
-                CategoryHeader(
+                TitleHeader(
                     title = "Atracciones",
-                    isExpanded = isCategoryExpanded.value,
                     onHeaderClick = {
-                        isCategoryExpanded.value = !isCategoryExpanded.value
                     }
                 )
             }
 
             if (isCategoryExpanded.value) {
                 items(rideList) { ride ->
-                    RideListItem(ride = ride, onClick = onRideClick)
+                    RideItem(ride = ride, onClick = onRideClick)
                 }
             }
         }
     }
+}
+
+@Composable
+fun TitleHeader(title: String, onHeaderClick: () -> Unit) {
+    Text(
+        text = title,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onHeaderClick() }
+            .padding(4.dp),
+        style = TextStyle(
+            fontSize = 10.sp,
+            color = Color.Gray
+        ),
+        textAlign = TextAlign.Center
+    )
 }
 
 @Composable
@@ -156,28 +171,27 @@ fun LandItem(land: Land, isExpanded: Boolean, onLandClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onLandClick() }
-            .padding(8.dp)
+            .padding(6.dp)
     ) {
         Text(
             text = land.name,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally),
             style = TextStyle(
-                fontSize = 14.sp,
-                color = Color.Red
+                fontSize = 12.sp,
+                color = Color(ContextCompat.getColor(LocalContext.current, R.color.primary))
             )
         )
-        if (isExpanded) {
-            // Flecha hacia arriba/abajo para indicar estado de expansión
-        }
     }
 }
 
 @Composable
-fun RideListItem(ride: Ride, onClick: (Ride) -> Unit) {
+fun RideItem(ride: Ride, onClick: (Ride) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick(ride) }
-            .padding(2.dp),
+            .padding(20.dp, 0.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -186,39 +200,23 @@ fun RideListItem(ride: Ride, onClick: (Ride) -> Unit) {
             color = if (ride.waitTime == null || ride.waitTime < 0) Color.Red else Color.White,
             modifier = Modifier.weight(1f),
             style = TextStyle(
-                fontSize = 10.sp,
+                fontSize = 8.sp,
                 color = Color.Gray
             ),
             textAlign = TextAlign.Center,
-            minLines = 2,
-            maxLines = 2,
+            minLines = 1,
+            maxLines = 1,
         )
         Text(
             text = if (ride.waitTime == null || ride.waitTime < 0) "CLOSED" else "${ride.waitTime} min",
             color = if (ride.waitTime == null || ride.waitTime < 0) Color.Red else Color.White,
+            modifier = Modifier.padding(4.dp, 0.dp),
             style = TextStyle(
                 fontSize = 10.sp,
                 color = Color.Gray
             ),
-            minLines = 2,
-            maxLines = 2,
+            minLines = 1,
+            maxLines = 1,
         )
     }
-}
-
-@Composable
-fun CategoryHeader(title: String, isExpanded: Boolean, onHeaderClick: () -> Unit) {
-    Text(
-        text = title,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onHeaderClick() }
-            .padding(8.dp),
-        style = TextStyle(
-            fontSize = 14.sp,
-            color = Color.Gray
-        ),
-        textAlign = TextAlign.Center
-    )
-    // Flecha hacia arriba/abajo para mostrar el estado de expansión
 }
