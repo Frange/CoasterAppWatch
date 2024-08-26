@@ -39,7 +39,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val viewModel: QueueViewModel by viewModels()
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun RenderParkInfoScreen(viewModel: QueueViewModel, onParkInfoSelected: (Int) -> Unit) {
+fun RenderParkInfoScreen(viewModel: MainViewModel, onParkInfoSelected: (Int) -> Unit) {
     val listState = rememberScalingLazyListState()
     val parkInfoListResult by viewModel.parkInfoList.observeAsState()
 
@@ -120,7 +120,7 @@ fun RenderParkInfoList(
 ) {
     ScalingLazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        state = listState // Aseguramos que el estado de la lista se pase correctamente
+        state = listState
     ) {
         when (parkInfoListResult) {
             is AppResult.Success -> {
@@ -153,25 +153,18 @@ fun RenderChip(
     onParkInfoSelected: (Int) -> Unit
 ) {
     val density = LocalDensity.current
-
-    // Obtener la información de los elementos visibles
     val visibleItemsInfo = listState.layoutInfo.visibleItemsInfo
-
-    // Calcular el centro de la pantalla en píxeles
     val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
     val screenCenter = screenHeightPx / 2
 
-    // Calcular el índice del elemento más cercano al centro
     val closestItemIndex = visibleItemsInfo
-        .takeIf { it.isNotEmpty() } // Asegurar que no esté vacío
+        .takeIf { it.isNotEmpty() }
         ?.minByOrNull { itemInfo ->
             val itemCenter = (itemInfo.offset + 220 + itemInfo.size / 2).toFloat()
             kotlin.math.abs(itemCenter - screenCenter)
         }?.index
 
-    // Verificar si este es el elemento seleccionado
     val isSelected = closestItemIndex == index
-
     val scale = if (isSelected) 1.0f else 0.7f
     val alpha = if (isSelected) 1f else 0.6f
 

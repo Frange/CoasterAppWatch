@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class QueueViewModel @Inject constructor(
+class MainViewModel @Inject constructor(
     private val queueRepository: QueueRepository
 ) : ViewModel() {
 
