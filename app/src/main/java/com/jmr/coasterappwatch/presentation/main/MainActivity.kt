@@ -104,7 +104,7 @@ fun RenderParkInfoScreen(viewModel: MainViewModel, onParkInfoSelected: (Int) -> 
 
     LaunchedEffect(parkInfoListResult) {
         if (parkInfoListResult is AppResult.Success) {
-            val indexToScrollTo = 0 // Ajusta el índice según el ítem que quieras centrar
+            val indexToScrollTo = 0
             listState.animateScrollToItem(indexToScrollTo)
         }
     }
@@ -160,13 +160,19 @@ fun RenderChip(
     val closestItemIndex = visibleItemsInfo
         .takeIf { it.isNotEmpty() }
         ?.minByOrNull { itemInfo ->
-            val itemCenter = (itemInfo.offset + 220 + itemInfo.size / 2).toFloat()
+            val itemCenter = (itemInfo.offset + 260 + itemInfo.size / 2).toFloat()
             kotlin.math.abs(itemCenter - screenCenter)
         }?.index
 
     val isSelected = closestItemIndex == index
-    val scale = if (isSelected) 1.0f else 0.7f
+    val scale = if (isSelected) 1.0f else 0.8f
     val alpha = if (isSelected) 1f else 0.6f
+
+    // ----------------< CONFIGURATION VALUES >-----------------
+    val fontColor = if (isSelected) Color.White else Color.Gray
+    val fontSize = if (isSelected) 15.sp else 12.sp
+    val height = if (isSelected) 40.dp else 36.dp
+    // ----------------------------------------------------------
 
     Chip(
         onClick = {
@@ -176,9 +182,10 @@ fun RenderChip(
             Text(
                 text = parkInfo.name,
                 textAlign = TextAlign.Center,
+                maxLines = 1,
                 style = TextStyle(
-                    color = if (isSelected) Color.White else Color.Gray,
-                    fontSize = if (isSelected) 12.sp else 8.sp,
+                    color = fontColor,
+                    fontSize = fontSize,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                 ),
             )
@@ -188,7 +195,7 @@ fun RenderChip(
             .padding(0.dp)
             .scale(scale)
             .alpha(alpha)
-            .height(if (isSelected) 36.dp else 20.dp),
+            .height(height),
         colors = if (isSelected) ChipDefaults.chipColors(
             backgroundColor = Color(
                 ContextCompat.getColor(

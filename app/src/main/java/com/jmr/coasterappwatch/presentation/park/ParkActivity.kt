@@ -9,6 +9,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,13 +20,18 @@ import com.jmr.coasterappwatch.domain.model.Park
 import com.jmr.coasterappwatch.domain.model.Ride
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
@@ -111,7 +117,10 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
     val expandedLands = remember { mutableStateOf<Map<Int, Boolean>>(emptyMap()) }
     val isCategoryExpanded = remember { mutableStateOf(true) }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
         item {
             Spacer(modifier = Modifier.height(20.dp))
         }
@@ -120,7 +129,6 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
             item {
                 LandItem(
                     land = land,
-                    isExpanded = expandedLands.value[land.id] ?: false,
                     onLandClick = {
                         expandedLands.value = expandedLands.value.toMutableMap().apply {
                             put(land.id, !(expandedLands.value[land.id] ?: false))
@@ -129,9 +137,17 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
                 )
             }
 
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             if (expandedLands.value[land.id] == true) {
                 items(land.rideList.orEmpty()) { ride ->
                     RideItem(ride = ride, onClick = onRideClick)
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -152,32 +168,52 @@ fun ParkListScreen(park: Park, onRideClick: (Ride) -> Unit) {
 }
 
 @Composable
-fun LandItem(land: Land, isExpanded: Boolean, onLandClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onLandClick() }
-            .padding(4.dp) // Ajusta el padding para dar más espacio
+fun LandItem(land: Land, onLandClick: () -> Unit) {
+    val fontSizeLandName = 14.sp
+    val fontSizeLandPadding = 4.dp
+    val fontSizeLandColor =
+        Color(ContextCompat.getColor(LocalContext.current, R.color.secondary_text))
+
+    val backgroundColor = Color(ContextCompat.getColor(LocalContext.current, R.color.secondary))
+    val backgroundShape = CircleShape
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = "--- ${land.name} ---",
+        Column(
             modifier = Modifier
-                .align(Alignment.CenterHorizontally),
-            style = TextStyle(
-                fontSize = 12.sp,
-                color = Color(ContextCompat.getColor(LocalContext.current, R.color.primary))
+                .wrapContentWidth()
+                .align(Alignment.Center)
+                .background(
+                    color = backgroundColor,
+                    shape = backgroundShape
+                )
+                .clickable { onLandClick() }
+                .padding(fontSizeLandPadding)
+        ) {
+            Text(
+                text = "--- ${land.name} ---",
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally),
+                style = TextStyle(
+                    fontSize = fontSizeLandName,
+                    color = fontSizeLandColor,
+                    fontWeight = FontWeight.ExtraBold
+                )
             )
-        )
+        }
     }
 }
 
 @Composable
 fun RideItem(ride: Ride, onClick: (Ride) -> Unit) {
+    val fontSizeRideName = 12.sp
+    val fontSizeRideTime = 14.sp
+
     Row(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(216.dp)
             .clickable { onClick(ride) }
-            .padding(20.dp, 0.dp),
+            .padding(20.dp, 3.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -193,12 +229,12 @@ fun RideItem(ride: Ride, onClick: (Ride) -> Unit) {
             ),
             modifier = Modifier.weight(1f),
             style = TextStyle(
-                fontSize = 8.sp,
+                fontSize = fontSizeRideName,
                 color = Color.Gray
             ),
             textAlign = TextAlign.Center,
             minLines = 1,
-            maxLines = 1,
+            maxLines = 2,
         )
         Text(
             text = if (ride.waitTime == null || ride.waitTime <= 0) "CLOSED" else "${ride.waitTime} min",
@@ -210,8 +246,9 @@ fun RideItem(ride: Ride, onClick: (Ride) -> Unit) {
             ),
             modifier = Modifier.padding(4.dp, 0.dp),
             style = TextStyle(
-                fontSize = 10.sp,
-                color = Color.Gray
+                fontSize = fontSizeRideTime,
+                color = Color.Gray,
+                fontWeight = FontWeight.Bold
             ),
             minLines = 1,
             maxLines = 1,
