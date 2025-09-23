@@ -5,14 +5,17 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
@@ -25,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.wear.compose.foundation.lazy.AutoCenteringParams
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -36,6 +40,12 @@ import com.jmr.coasterappwatch.domain.base.AppResult
 import com.jmr.coasterappwatch.domain.model.ParkInfo
 import com.jmr.coasterappwatch.presentation.park.ParkActivity
 import dagger.hilt.android.AndroidEntryPoint
+
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import com.jmr.coasterappwatch.utils.priorityOrder
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -98,111 +108,230 @@ fun RenderParkInfoScreen(viewModel: MainViewModel, onParkInfoSelected: (Int) -> 
     val listState = rememberScalingLazyListState()
     val parkInfoListResult by viewModel.parkInfoList.observeAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.requestAllParkList()
-    }
+    // pedir datos al iniciar
+    LaunchedEffect(Unit) { viewModel.requestAllParkList() }
 
-    LaunchedEffect(parkInfoListResult) {
-        if (parkInfoListResult is AppResult.Success) {
-            val indexToScrollTo = 0
-            listState.animateScrollToItem(indexToScrollTo)
+    // selectedIndex calculado de forma declarativa (sin efectos)
+    val selectedIndex by remember {
+        derivedStateOf {
+            val visible = listState.layoutInfo.visibleItemsInfo
+            if (visible.isEmpty()) null
+            else {
+                val screenCenter =
+                    listState.layoutInfo.viewportEndOffset / 2f // usa viewport para ser independiente de density
+                visible.minByOrNull { item ->
+                    kotlin.math.abs(item.offset + item.size / 2f - screenCenter)
+                }?.index
+            }
         }
     }
 
-    RenderParkInfoList(parkInfoListResult, listState, onParkInfoSelected)
+    val parkInfos: List<ParkInfo> = when (val result = parkInfoListResult) {
+        is AppResult.Success -> result.data
+        else -> emptyList()
+    }
+    CenterSnapList(parkInfoList = parkInfos, onParkInfoSelected = { id ->
+        // aquí maneja la selección, por ejemplo:
+        // saveSelectedParkInfoId(LocalContext.current, id)
+    })
+
+
+//    RenderParkInfoList(parkInfoListResult, listState, selectedIndex, onParkInfoSelected)
 }
 
 @Composable
 fun RenderParkInfoList(
     parkInfoListResult: AppResult<List<ParkInfo>>?,
     listState: ScalingLazyListState,
+    selectedIndex: Int?,
     onParkInfoSelected: (Int) -> Unit
 ) {
+    // AutoCenteringParams hace snap al item más cercano cuando el usuario suelta el scroll
     ScalingLazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        state = listState
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 6.dp),
+        state = listState,
+        // si tu versión soporta AutoCenteringParams, úsalo:
+        autoCentering = AutoCenteringParams(itemIndex = 0, itemOffset = 0)
     ) {
         when (parkInfoListResult) {
             is AppResult.Success -> {
-                val parkInfoList = parkInfoListResult.data
-
                 item {
                     ListHeader {
-                        Text(text = "List Header")
+                        Text(
+                            text = "Parques",
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
                     }
                 }
-                items(parkInfoList.size) { index ->
-                    RenderChip(parkInfoList[index], listState, index, onParkInfoSelected)
+
+                val list = parkInfoListResult.data
+                items(list.size) { index ->
+                    RenderChip(list[index], index, selectedIndex, onParkInfoSelected)
                 }
+
+                item { Spacer(modifier = Modifier.height(8.dp)) }
             }
 
-            is AppResult.Error -> {}
-            is AppResult.Exception -> {}
-            is AppResult.Loading -> {}
-            null -> {}
+            is AppResult.Loading -> { /* placeholder si quieres */
+            }
+
+            else -> { /* error / vacío */
+            }
         }
     }
 }
 
-@SuppressLint("FrequentlyChangedStateReadInComposition")
 @Composable
 fun RenderChip(
     parkInfo: ParkInfo,
-    listState: ScalingLazyListState,
     index: Int,
+    selectedIndex: Int?,
     onParkInfoSelected: (Int) -> Unit
 ) {
+    val isSelected = selectedIndex != null && selectedIndex == index
+
+    val scale by animateFloatAsState(if (isSelected) 1.05f else 0.95f)
+    val alpha by animateFloatAsState(if (isSelected) 1f else 0.85f)
+    val height = if (isSelected) 44.dp else 36.dp
+    val fontSize = if (isSelected) 15.sp else 13.sp
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp, horizontal = 6.dp)
+            .height(height)
+            .scale(scale)
+            .alpha(alpha),
+        contentAlignment = Alignment.Center
+    ) {
+        Chip(
+            onClick = { onParkInfoSelected(parkInfo.id!!) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height),
+            label = {
+                Text(
+                    text = parkInfo.name,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        fontSize = fontSize,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color.White else Color.LightGray
+                    )
+                )
+            },
+            colors = if (isSelected)
+                ChipDefaults.chipColors(
+                    backgroundColor = Color(
+                        ContextCompat.getColor(
+                            LocalContext.current,
+                            R.color.primary
+                        )
+                    )
+                )
+            else ChipDefaults.secondaryChipColors()
+        )
+    }
+}
+
+@Composable
+fun CenterSnapList(
+    parkInfoList: List<ParkInfo>,
+    onParkInfoSelected: (Int) -> Unit
+) {
+    val listState = rememberLazyListState()
+    val flingBehavior = rememberSnapFlingBehavior(listState)
+
+    val configuration = LocalConfiguration.current
     val density = LocalDensity.current
-    val visibleItemsInfo = listState.layoutInfo.visibleItemsInfo
-    val screenHeightPx = with(density) { LocalConfiguration.current.screenHeightDp.dp.toPx() }
-    val screenCenter = screenHeightPx / 2
+    val halfScreenDp = (configuration.screenHeightDp.dp) / 2
+    val halfScreenPx = with(density) { halfScreenDp.toPx() }
 
-    val closestItemIndex = visibleItemsInfo
-        .takeIf { it.isNotEmpty() }
-        ?.minByOrNull { itemInfo ->
-            val itemCenter = (itemInfo.offset + 260 + itemInfo.size / 2).toFloat()
-            kotlin.math.abs(itemCenter - screenCenter)
-        }?.index
+    // Número de elementos antes de la lista de datos (aquí: 1 spacer arriba)
+    val headerCount = 1
+    val dataStartIndex = headerCount
+    val dataEndIndex = dataStartIndex + parkInfoList.size - 1
 
-    val isSelected = closestItemIndex == index
-    val scale = if (isSelected) 1.0f else 0.8f
-    val alpha = if (isSelected) 1f else 0.6f
+    val selectedIndex by remember(listState, parkInfoList) {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val visible = layoutInfo.visibleItemsInfo
+            if (parkInfoList.isEmpty()) return@derivedStateOf 0
+            if (visible.isEmpty()) return@derivedStateOf 0
 
-    // ----------------< CONFIGURATION VALUES >-----------------
-    val fontColor = if (isSelected) Color.White else Color.Gray
-    val fontSize = if (isSelected) 15.sp else 12.sp
-    val height = if (isSelected) 40.dp else 36.dp
-    // ----------------------------------------------------------
+            // centro real del viewport en px
+            val centerPx = layoutInfo.viewportStartOffset + layoutInfo.viewportSize.height / 2f
 
-    Chip(
-        onClick = {
-            onParkInfoSelected(parkInfo.id!!)
-        },
-        label = {
-            Text(
-                text = parkInfo.name,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                style = TextStyle(
-                    color = fontColor,
-                    fontSize = fontSize,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                ),
-            )
-        },
+            // rangos absolutos en LazyColumn por los spacers
+            val headerCount = 1
+            val dataStartIndex = headerCount
+            val dataEndIndex = dataStartIndex + parkInfoList.size - 1
+
+            // solo items visibles que corresponden a datos (filtramos spacers)
+            val visibleData = visible.filter { it.index in dataStartIndex..dataEndIndex }
+
+            // si no hay items de datos visibles, resolvemos por spacer visible
+            if (visibleData.isEmpty()) {
+                if ((visible.firstOrNull()?.index ?: 0) < dataStartIndex) return@derivedStateOf 0
+                return@derivedStateOf parkInfoList.lastIndex
+            }
+
+            // altura representativa y umbral (ajustable)
+            val avgItemHeightPx = visibleData.map { it.size }
+                .let { if (it.isEmpty()) 0f else it.average().toFloat() }
+                .coerceAtLeast(1f)
+            val thresholdPx = avgItemHeightPx * 0.35f // 35% evita falsas detecciones de top/bottom
+
+            val viewportBottom = layoutInfo.viewportStartOffset + layoutInfo.viewportSize.height
+
+            // ---- atTop: SOLO cuando el spacer superior sigue siendo el primer item visible (índice absoluto 0)
+            val atTop = listState.firstVisibleItemIndex == 0 &&
+                    listState.firstVisibleItemScrollOffset <= thresholdPx.toInt()
+            if (atTop) return@derivedStateOf 0
+
+            // ---- atBottom: último visible de datos y su borde inferior cercano al fondo
+            val lastVisibleData = visibleData.last()
+            val lastItemBottom = lastVisibleData.offset + lastVisibleData.size
+            val atBottom = lastVisibleData.index == dataEndIndex &&
+                    lastItemBottom >= (viewportBottom - thresholdPx)
+            if (atBottom) return@derivedStateOf parkInfoList.lastIndex
+
+            // ---- en resto de casos: calcular centros de los items visibles y elegir el más cercano al centroPx
+            val closestAbsoluteIndex = visibleData
+                .minByOrNull { kotlin.math.abs((it.offset + it.size / 2f) - centerPx) }
+                ?.index ?: dataStartIndex
+
+            // convertir índice absoluto (LazyColumn) -> relativo dentro de parkInfoList
+            val closestRelative = (closestAbsoluteIndex - dataStartIndex).coerceIn(0, parkInfoList.lastIndex)
+            closestRelative
+        }
+    }
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(0.dp)
-            .scale(scale)
-            .alpha(alpha)
-            .height(height),
-        colors = if (isSelected) ChipDefaults.chipColors(
-            backgroundColor = Color(
-                ContextCompat.getColor(
-                    LocalContext.current,
-                    R.color.primary
-                )
+            .padding(horizontal = 12.dp),
+        state = listState,
+        flingBehavior = flingBehavior,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        contentPadding = PaddingValues(vertical = 0.dp)
+    ) {
+        // Spacer superior
+        item { Spacer(modifier = Modifier.height(halfScreenDp)) }
+
+        itemsIndexed(parkInfoList) { index, parkInfo ->
+            RenderChip(
+                parkInfo = parkInfo,
+                index = index,
+                selectedIndex = selectedIndex,
+                onParkInfoSelected = onParkInfoSelected
             )
-        ) else ChipDefaults.secondaryChipColors(),
-    )
+        }
+
+        // Spacer inferior
+        item { Spacer(modifier = Modifier.height(halfScreenDp)) }
+    }
 }
