@@ -108,7 +108,6 @@ fun RenderParkInfoScreen(viewModel: MainViewModel, onParkInfoSelected: (Int) -> 
     val listState = rememberScalingLazyListState()
     val parkInfoListResult by viewModel.parkInfoList.observeAsState()
 
-    // pedir datos al iniciar
     LaunchedEffect(Unit) { viewModel.requestAllParkList() }
 
     // selectedIndex calculado de forma declarativa (sin efectos)
@@ -130,57 +129,10 @@ fun RenderParkInfoScreen(viewModel: MainViewModel, onParkInfoSelected: (Int) -> 
         is AppResult.Success -> result.data
         else -> emptyList()
     }
-    CenterSnapList(parkInfoList = parkInfos, onParkInfoSelected = { id ->
-        // aquí maneja la selección, por ejemplo:
-        // saveSelectedParkInfoId(LocalContext.current, id)
-    })
-
-
-//    RenderParkInfoList(parkInfoListResult, listState, selectedIndex, onParkInfoSelected)
-}
-
-@Composable
-fun RenderParkInfoList(
-    parkInfoListResult: AppResult<List<ParkInfo>>?,
-    listState: ScalingLazyListState,
-    selectedIndex: Int?,
-    onParkInfoSelected: (Int) -> Unit
-) {
-    // AutoCenteringParams hace snap al item más cercano cuando el usuario suelta el scroll
-    ScalingLazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 6.dp),
-        state = listState,
-        // si tu versión soporta AutoCenteringParams, úsalo:
-        autoCentering = AutoCenteringParams(itemIndex = 0, itemOffset = 0)
-    ) {
-        when (parkInfoListResult) {
-            is AppResult.Success -> {
-                item {
-                    ListHeader {
-                        Text(
-                            text = "Parques",
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                    }
-                }
-
-                val list = parkInfoListResult.data
-                items(list.size) { index ->
-                    RenderChip(list[index], index, selectedIndex, onParkInfoSelected)
-                }
-
-                item { Spacer(modifier = Modifier.height(8.dp)) }
-            }
-
-            is AppResult.Loading -> { /* placeholder si quieres */
-            }
-
-            else -> { /* error / vacío */
-            }
-        }
-    }
+    CenterSnapList(
+        parkInfoList = parkInfos,
+        onParkInfoSelected = onParkInfoSelected
+    )
 }
 
 @Composable
@@ -246,14 +198,7 @@ fun CenterSnapList(
     val flingBehavior = rememberSnapFlingBehavior(listState)
 
     val configuration = LocalConfiguration.current
-    val density = LocalDensity.current
     val halfScreenDp = (configuration.screenHeightDp.dp) / 2
-    val halfScreenPx = with(density) { halfScreenDp.toPx() }
-
-    // Número de elementos antes de la lista de datos (aquí: 1 spacer arriba)
-    val headerCount = 1
-    val dataStartIndex = headerCount
-    val dataEndIndex = dataStartIndex + parkInfoList.size - 1
 
     val selectedIndex by remember(listState, parkInfoList) {
         derivedStateOf {
