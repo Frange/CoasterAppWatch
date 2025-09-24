@@ -106,34 +106,6 @@ class QueueRepositoryImpl @Inject constructor(
         )
     }.flowOn(Dispatchers.IO)
 
-
-    private fun getSelectedPark(): Int? {
-        val sharedPreferences: SharedPreferences =
-            application.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-        val parkInfoId = sharedPreferences.getInt("selected_park_info_id", -1)
-        return if (parkInfoId != -1) parkInfoId else null
-    }
-
-//    override fun requestRideList() = flow {
-//        emit(AppResult.loading())
-//
-//        if (parkInfoList.isEmpty()) {
-//            requestAllParkList()
-//                .catch { exception ->
-//                    emit(AppResult.exception(exception))
-//                }
-//                .collect { _ ->
-////                    rideList = park.rideList!!
-//                    rideList = parkInfoList[0]
-//                    emit(AppResult.success(parkInfoList))
-//                }
-//        } else {
-//            rideList = park.rideList!!
-//
-//            emit(AppResult.success(rideList))
-//        }
-//    }
-
     override fun getCurrentCompanyList(): List<Company> {
         return companyList
     }

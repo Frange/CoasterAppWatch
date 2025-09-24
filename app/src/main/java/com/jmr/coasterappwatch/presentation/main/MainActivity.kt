@@ -1,14 +1,13 @@
 package com.jmr.coasterappwatch.presentation.main
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -21,20 +20,15 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.wear.compose.foundation.lazy.AutoCenteringParams
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.foundation.lazy.ScalingLazyListState
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.ListHeader
 import com.jmr.coasterappwatch.R
 import com.jmr.coasterappwatch.domain.base.AppResult
 import com.jmr.coasterappwatch.domain.model.ParkInfo
@@ -45,7 +39,6 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import com.jmr.coasterappwatch.utils.priorityOrder
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -129,64 +122,11 @@ fun RenderParkInfoScreen(viewModel: MainViewModel, onParkInfoSelected: (Int) -> 
         is AppResult.Success -> result.data
         else -> emptyList()
     }
+
     CenterSnapList(
         parkInfoList = parkInfos,
         onParkInfoSelected = onParkInfoSelected
     )
-}
-
-@Composable
-fun RenderChip(
-    parkInfo: ParkInfo,
-    index: Int,
-    selectedIndex: Int?,
-    onParkInfoSelected: (Int) -> Unit
-) {
-    val isSelected = selectedIndex != null && selectedIndex == index
-
-    val scale by animateFloatAsState(if (isSelected) 1.05f else 0.95f)
-    val alpha by animateFloatAsState(if (isSelected) 1f else 0.85f)
-    val height = if (isSelected) 44.dp else 36.dp
-    val fontSize = if (isSelected) 15.sp else 13.sp
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 6.dp)
-            .height(height)
-            .scale(scale)
-            .alpha(alpha),
-        contentAlignment = Alignment.Center
-    ) {
-        Chip(
-            onClick = { onParkInfoSelected(parkInfo.id!!) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(height),
-            label = {
-                Text(
-                    text = parkInfo.name,
-                    maxLines = 1,
-                    textAlign = TextAlign.Center,
-                    style = TextStyle(
-                        fontSize = fontSize,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) Color.White else Color.LightGray
-                    )
-                )
-            },
-            colors = if (isSelected)
-                ChipDefaults.chipColors(
-                    backgroundColor = Color(
-                        ContextCompat.getColor(
-                            LocalContext.current,
-                            R.color.primary
-                        )
-                    )
-                )
-            else ChipDefaults.secondaryChipColors()
-        )
-    }
 }
 
 @Composable
@@ -264,7 +204,6 @@ fun CenterSnapList(
         horizontalAlignment = Alignment.CenterHorizontally,
         contentPadding = PaddingValues(vertical = 0.dp)
     ) {
-        // Spacer superior
         item { Spacer(modifier = Modifier.height(halfScreenDp)) }
 
         itemsIndexed(parkInfoList) { index, parkInfo ->
@@ -276,7 +215,60 @@ fun CenterSnapList(
             )
         }
 
-        // Spacer inferior
         item { Spacer(modifier = Modifier.height(halfScreenDp)) }
+    }
+}
+
+@Composable
+fun RenderChip(
+    parkInfo: ParkInfo,
+    index: Int,
+    selectedIndex: Int?,
+    onParkInfoSelected: (Int) -> Unit
+) {
+    val isSelected = selectedIndex != null && selectedIndex == index
+
+    val scale by animateFloatAsState(if (isSelected) 1.05f else 0.95f)
+    val alpha by animateFloatAsState(if (isSelected) 1f else 0.85f)
+    val height = if (isSelected) 44.dp else 36.dp
+    val fontSize = if (isSelected) 15.sp else 13.sp
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp, horizontal = 6.dp)
+            .height(height)
+            .scale(scale)
+            .alpha(alpha),
+        contentAlignment = Alignment.Center
+    ) {
+        Chip(
+            onClick = { onParkInfoSelected(parkInfo.id!!) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(height),
+            label = {
+                Text(
+                    text = parkInfo.name,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                    style = TextStyle(
+                        fontSize = fontSize,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color.White else Color.LightGray
+                    )
+                )
+            },
+            colors = if (isSelected)
+                ChipDefaults.chipColors(
+                    backgroundColor = Color(
+                        ContextCompat.getColor(
+                            LocalContext.current,
+                            R.color.primary
+                        )
+                    )
+                )
+            else ChipDefaults.secondaryChipColors()
+        )
     }
 }
