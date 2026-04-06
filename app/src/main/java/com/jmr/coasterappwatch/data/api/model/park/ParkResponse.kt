@@ -5,19 +5,19 @@ import com.jmr.coasterappwatch.data.api.model.park.land.toLand
 import com.jmr.coasterappwatch.data.api.model.park.ride.response.ResponseRide
 import com.jmr.coasterappwatch.data.api.model.park.ride.response.toRide
 import com.jmr.coasterappwatch.domain.model.Park
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ParkResponse(
-    @Json(name = "rides")
-    var rides: List<ResponseRide>,
+    @SerialName("rides")
+    val rides: List<ResponseRide>? = emptyList(),
 
-    @Json(name = "lands")
-    var lands: List<ResponseLand>,
+    @SerialName("lands")
+    val lands: List<ResponseLand>? = emptyList(),
 )
 
 fun ParkResponse.toPark() = Park(
-    rideList = rides.map { it.toRide() },
-    landList = lands.map { it.toLand() }
+    rideList = rides?.map { it.toRide() } ?: emptyList(),
+    landList = lands?.map { it.toLand() } ?: emptyList()
 )

@@ -1,14 +1,9 @@
 plugins {
-//    alias(libs.plugins.android.application)
-//    alias(libs.plugins.jetbrains.kotlin.android)
-
-//    id("kotlin-kapt")
-//    id("com.google.dagger.hilt.android")
-
     id("com.android.application")
     id("kotlin-android")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -17,38 +12,44 @@ android {
 
     defaultConfig {
         applicationId = "com.jmr.coasterappwatch"
-        minSdk = 30
+        minSdk = 30 // Wear OS 3.0+
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
         vectorDrawables {
             useSupportLibrary = true
         }
-
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true // Recomendado en Wear OS para reducir tamaño
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
     }
+
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11 // Actualizado a 11 para Hilt moderno
+        targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
     }
+
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -57,57 +58,42 @@ android {
 }
 
 dependencies {
-
-    implementation(libs.material.v180)
-
-    debugImplementation(libs.androidx.ui.tooling)
-    implementation(libs.androidx.ui.tooling.preview)
+    // --- WEAR OS CORE ---
     implementation(libs.play.services.wearable)
+
+    // --- WEAR COMPOSE (Las piezas clave para el rendimiento) ---
+    implementation("androidx.wear.compose:compose-material:1.3.0")
+    implementation("androidx.wear.compose:compose-foundation:1.3.0")
+    implementation("androidx.wear.compose:compose-navigation:1.3.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
+
+    // --- COMPOSE GENERAL ---
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
     implementation(libs.ui.tooling.preview)
-    implementation(libs.compose.material)
-    implementation(libs.compose.foundation)
     implementation(libs.activity.compose)
-    implementation(libs.core.splashscreen)
-    implementation(libs.material3.android)
-    implementation(libs.runtime.livedata)
-    androidTestImplementation(platform(libs.compose.bom))
-    debugImplementation(libs.ui.tooling)
-
-    // Test
-    androidTestImplementation(libs.ui.test.junit4)
-    debugImplementation(libs.ui.test.manifest)
-
-    // Android X and Kotlin
-    implementation(libs.foundation)
-    implementation(libs.androidx.material)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    // Injection
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler.v247)
+    // --- HOROLOGIST (Librería de Google para Wear OS, vital para el scroll) ---
+    implementation("com.google.android.horologist:horologist-compose-layout:0.6.9")
 
-    // Network
-    implementation(libs.logging.interceptor)
+    // --- DI / HILT (Limpiado y unificado) ---
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+    // --- NETWORK ---
     implementation(libs.retrofit)
-    implementation(libs.converter.moshi)
     implementation(libs.converter.gson)
-    implementation(libs.adapter.rxjava2)
+    implementation(libs.logging.interceptor)
 
-    // Images
-    implementation(libs.picasso)
-//    implementation(libs.material)
-    implementation(libs.androidx.compose.material.v140rc01)
-
+    // --- TOOLS ---
+    implementation(libs.core.splashscreen)
+    debugImplementation(libs.ui.tooling)
 }
 
 kapt {
     correctErrorTypes = true
-}
-
-hilt {
-    enableAggregatingTask = true
 }

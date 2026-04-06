@@ -2,26 +2,24 @@ package com.jmr.coasterappwatch.data.api.model.park.land
 
 import com.jmr.coasterappwatch.data.api.model.park.ride.response.ResponseRide
 import com.jmr.coasterappwatch.data.api.model.park.ride.response.toRide
-import com.jmr.coasterappwatch.domain.model.Land
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import com.jmr.coasterappwatch.domain.model.Land // Asegúrate de importar tu modelo de dominio
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
-
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ResponseLand(
-    @Json(name = "id")
-    var id: Int,
+    @SerialName("id")
+    val id: Int,
 
-    @Json(name = "name")
-    var name: String,
+    @SerialName("name")
+    val name: String,
 
-    @Json(name = "rides")
-    var rides: List<ResponseRide>
-
+    @SerialName("rides")
+    val rides: List<ResponseRide> = emptyList()
 )
 
 fun ResponseLand.toLand() = Land(
-    id = id,
-    name = name,
-    rideList = rides.map { it.toRide() }
+    id = this.id,
+    name = this.name,
+    rideList = this.rides.map { it.toRide() }
 )

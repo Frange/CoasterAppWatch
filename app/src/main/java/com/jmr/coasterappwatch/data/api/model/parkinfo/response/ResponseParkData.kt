@@ -2,19 +2,19 @@ package com.jmr.coasterappwatch.data.api.model.parkinfo.response
 
 import com.jmr.coasterappwatch.domain.model.Company
 import com.jmr.coasterappwatch.domain.model.ParkInfo
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ResponseParkData(
-    @Json(name = "id")
-    var id: Int,
+    @SerialName("id")
+    val id: Int,
 
-    @Json(name = "name")
-    var name: String,
+    @SerialName("name")
+    val name: String,
 
-    @Json(name = "parks")
-    var parks: List<ParkInfo>
+    @SerialName("parks")
+    val parks: List<ParkInfo> = emptyList()
 )
 
 fun ResponseParkData.toCompany() = Company(

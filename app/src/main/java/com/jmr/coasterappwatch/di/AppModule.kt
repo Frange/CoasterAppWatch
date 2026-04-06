@@ -1,23 +1,21 @@
 package com.jmr.coasterappwatch.di
 
 import android.content.Context
-import com.google.gson.Gson
 import com.jmr.coasterappwatch.data.api.AppUrl
 import com.jmr.coasterappwatch.data.api.service.MockApiService
 import com.jmr.coasterappwatch.data.api.service.QueueApiService
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import okhttp3.Interceptor
+import kotlinx.serialization.json.Json
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
-
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -28,14 +26,20 @@ object AppModule {
     fun provideQueueApiService(
         okHttpClient: OkHttpClient
     ): QueueApiService {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(AppUrl.BASE_QUEUE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .client(okHttpClient)
-            .build()
+        val contentType = "application/json".toMediaType()
+        val json = Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+        }
 
-        return retrofit.create(QueueApiService::class.java)
+        return Retrofit.Builder()
+            .baseUrl(AppUrl.BASE_QUEUE_URL)
+            .client(okHttpClient)
+            // Usamos Kotlinx Serialization en lugar de Gson
+            .addConverterFactory(json.asConverterFactory(contentType))
+            // ELIMINADO: RxJava2CallAdapterFactory (No hace falta para Coroutines)
+            .build()
+            .create(QueueApiService::class.java)
     }
 
     @Singleton
@@ -43,36 +47,26 @@ object AppModule {
     fun providesOkHttpClient(
         httpLoggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient =
-        OkHttpClient
-            .Builder()
+        OkHttpClient.Builder()
             .addInterceptor(httpLoggingInterceptor)
-            .addInterceptor(Interceptor {
-                val token = "17272049-aba4-43f9-be9c-c086347e1ec6"
-                val newRequest = it.request().newBuilder()
-                    .addHeader("Authorization", token)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .addHeader("Authorization", "17272049-aba4-43f9-be9c-c086347e1ec6")
                     .addHeader("Content-Type", "application/json")
                     .addHeader("Accept", "application/json")
                     .build()
-                it.proceed(newRequest)
-            }).build()
+                chain.proceed(request)
+            }.build()
 
     @Singleton
     @Provides
-    fun providesHttpLoggingInterceptor() = HttpLoggingInterceptor()
-        .apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
+    fun providesHttpLoggingInterceptor() = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
 
     @Singleton
     @Provides
     fun provideMockApiService(
         @ApplicationContext context: Context
-    ): MockApiService {
-        return MockApiService(context)
-    }
-
-    @Singleton
-    @Provides
-    fun providesGson() = Gson()
-
+    ): MockApiService = MockApiService(context)
 }

@@ -1,32 +1,23 @@
 package com.jmr.coasterappwatch.data.api.model.park.ride.response
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerialName
 import com.jmr.coasterappwatch.domain.model.Ride
-import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 
-
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ResponseRide(
-    @Json(name = "id")
-    var id: Int,
-
-    @Json(name = "name")
-    var name: String,
-
-    @Json(name = "is_open")
-    var is_open: Boolean,
-
-    @Json(name = "wait_time")
-    var wait_time: Int,
-
-    @Json(name = "last_updated")
-    var last_updated: String
+    @SerialName("id") val id: Int,
+    @SerialName("name") val name: String,
+    @SerialName("is_open") val is_open: Boolean,
+    @SerialName("wait_time") val wait_time: Int?, // Nota el '?' por si viene nulo
+    @SerialName("last_updated") val last_updated: String?
 )
 
 fun ResponseRide.toRide() = Ride(
     id = id,
     name = name,
-    isOpen = is_open,
-    waitTime = wait_time,
-    lastUpdated = last_updated,
+    isOpen = is_open && wait_time!! > 1,
+    waitTime = wait_time ?: 0,
+    lastUpdated = last_updated ?: "",
+    isFavourite = false
 )
