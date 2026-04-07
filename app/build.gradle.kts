@@ -65,6 +65,7 @@ dependencies {
     implementation("androidx.wear.compose:compose-material:1.3.0")
     implementation("androidx.wear.compose:compose-foundation:1.3.0")
     implementation("androidx.wear.compose:compose-navigation:1.3.0")
+    implementation("androidx.compose.material:material-icons-extended")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
@@ -83,6 +84,11 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+
+    // Data store
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    // Icons
+    implementation("androidx.compose.material:material-icons-extended")
 
     // --- NETWORK ---
     implementation(libs.retrofit)

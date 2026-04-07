@@ -42,5 +42,6 @@ data class ParkInfo(
     val continent: String,
     val latitude: String,
     val longitude: String,
-    val timezone: String
+    val timezone: String,
+    val isFavorite: Boolean = false
 )
